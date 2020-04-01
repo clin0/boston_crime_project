@@ -1,0 +1,209 @@
+---
+title: "Crimes in Boston, Quick EDA with R "
+author: Siyi Lin
+date: June 6, 2019
+output:
+  md_document:
+    variant: markdown_github
+---
+
+This is my coursework. Our group is wondering the crime in Boston area. We use the dataset from Kaggle, [Crime in Boston](https://www.kaggle.com/AnalyzeBoston/crimes-in-boston)
+
+* What’s the dataset about?
+
+This is a dataset containing records from the new crime incident report system in Boston area, which includes a reduced set of fields focused on capturing the type of incident as well as when and where it occurred.
+
+* Which party collected the dataset?
+
+Crime incident reports are provided by Boston Police Department (BPD) to document the initial details surrounding an incident to which BPD officers respond.
+
+* Which period of time is covered?
+
+June 14, 2015 to September 3, 2018
+
+
+# Load Library
+
+```{r}
+library(tidyverse)
+library(DataExplorer)
+library(lubridate)
+```
+
+
+# Load Data
+
+```{r}
+Boston_Crime <- read.table("Boston_Crime.csv", header = TRUE, sep=",")
+```
+
+
+# Inspecting data frames
+
+Use head() function to view the first few rows.
+```{r}
+head(Boston_Crime,5)
+```
+
+
+Use str() function to check the structure of the data
+```{r}
+str(Boston_Crime)
+```
+
+
+```{r}
+summary(Boston_Crime)
+```
+
+
+Anthor way: to use glimpse() function to see every column in a data frame
+```{r}
+glimpse(Boston_Crime)
+```
+
+
+```{r}
+plot_intro(Boston_Crime)
+```
+
+
+
+
+# Let's start the visualization and Exploratory Data Analysis (EDA)  
+
+```{r}
+plot_correlation(Boston_Crime)
+```
+
+
+```{r}
+plot_histogram(Boston_Crime)
+```
+
+
+```{r}
+plot_bar(Boston_Crime)
+```
+
+
+
+```{r}
+Boston_Crime  %>% separate(OCCURRED_ON_DATE, c("Date", "Time"), sep = " ") %>% mutate(Date = ymd(Date)) %>% 
+    ggplot(aes(Date))+
+    geom_freqpoly() +
+    ylab("Number of Crimes")
+```
+
+
+
+
+```{r}
+Boston_Crime  %>% count(OFFENSE_CODE_GROUP) %>% arrange(-n) %>% head(30) %>% 
+  ggplot(aes(reorder(OFFENSE_CODE_GROUP,n), n))+
+  geom_col()+
+  coord_flip()+
+  labs(x = NULL, y = 'Counts')
+```
+
+
+
+
+```{r}
+Boston_Crime %>% count(STREET) %>% arrange(-n) %>% head(15) %>% 
+    ggplot(aes(reorder(STREET,n), n))+
+    geom_col()+
+    coord_flip()+
+    labs(x = NULL, y = NULL)
+```
+
+
+
+
+
+```{r}
+Boston_Crime %>% filter(DISTRICT %in% (Boston_Crime %>% count(DISTRICT) %>% arrange(-n) %>% pull(DISTRICT)),
+                OFFENSE_CODE_GROUP %in% (Boston_Crime %>% count(OFFENSE_CODE_GROUP) %>% arrange(-n) %>% head(5) %>% pull(OFFENSE_CODE_GROUP))
+                ) %>% 
+    ggplot(aes(DISTRICT, fill = OFFENSE_CODE_GROUP))+
+    geom_bar()+
+    scale_fill_ordinal()+
+    coord_flip()
+```
+
+
+
+
+```{r}
+Boston_Crime %>% filter(STREET %in% (Boston_Crime %>% count(STREET) %>% arrange(-n) %>% head(5) %>% pull(STREET)),
+                OFFENSE_CODE_GROUP %in% (Boston_Crime %>% count(OFFENSE_CODE_GROUP) %>% arrange(-n) %>% head(5) %>% pull(OFFENSE_CODE_GROUP))
+                ) %>% 
+    ggplot(aes(STREET, fill = OFFENSE_CODE_GROUP))+
+    geom_bar(position = "fill")+
+    scale_fill_ordinal()+
+    coord_flip()
+```
+
+
+
+```{r}
+Boston_Crime %>% filter(STREET %in% (Boston_Crime %>% count(STREET) %>% arrange(-n) %>% head(5) %>% pull(STREET))) %>% 
+    ggplot(aes(DISTRICT, fill = STREET))+
+    geom_bar(position = "fill")+
+    coord_flip()+
+    scale_fill_ordinal()
+```
+
+
+
+
+
+```{r}
+Boston_Crime %>% filter(STREET %in% (Boston_Crime %>% count(STREET) %>% arrange(-n) %>% head(5) %>% pull(STREET))) %>% 
+    ggplot(aes(DAY_OF_WEEK, fill = STREET))+
+    geom_bar()+
+    coord_flip()+
+    scale_fill_ordinal()
+```
+
+
+
+
+```{r}
+Boston_Crime %>% filter(OFFENSE_CODE_GROUP %in% (Boston_Crime %>% count(OFFENSE_CODE_GROUP) %>% arrange(-n) %>% head(5) %>% pull(OFFENSE_CODE_GROUP))) %>% 
+    ggplot(aes(HOUR, fill = OFFENSE_CODE_GROUP))+
+    geom_bar()+
+    coord_flip()+
+    scale_fill_ordinal()
+```
+
+
+```{r}
+Boston_Crime %>% filter(OFFENSE_CODE_GROUP %in% (Boston_Crime %>% count(OFFENSE_CODE_GROUP) %>% arrange(-n) %>% head(5) %>% pull(OFFENSE_CODE_GROUP))) %>% 
+  ggplot(aes(HOUR, fill = OFFENSE_CODE_GROUP))+
+  geom_bar()+
+  facet_wrap(~YEAR)+
+  coord_flip()+
+  scale_fill_ordinal()
+```
+
+
+
+```{r}
+Boston_Crime %>% filter(OFFENSE_CODE_GROUP %in% (Boston_Crime %>% count(OFFENSE_CODE_GROUP) %>% arrange(-n) %>% head(5) %>% pull(OFFENSE_CODE_GROUP))) %>% 
+  ggplot(aes(DISTRICT, fill = OFFENSE_CODE_GROUP))+
+  geom_bar()+
+  facet_wrap(~YEAR)+
+  coord_flip()+
+  scale_fill_ordinal()
+```
+
+
+# Resource
+
+[ggplot cheatsheet](https://rstudio.com/wp-content/uploads/2016/11/ggplot2-cheatsheet-2.1.pdf)
+
+[Introduction to Data Exploration and Analysis with R](https://bookdown.org/mikemahoney218/IDEAR/visualizing-your-data.html#diamonds)
+
+[Kaggle Notebook - Crime in Boson EDA with R](https://www.kaggle.com/ekrembayar/crimes-in-boston-eda-with-r)
+
